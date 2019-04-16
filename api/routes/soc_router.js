@@ -55,7 +55,7 @@ router.post('/new', upload.single('logo'), (req, res, next) => {
     if (req.file) {
             imageName = req.file.location;
     } else {
-        imageName = "Temporary Logo";
+        imageName = "https://s3.eu-west-2.amazonaws.com/lussms-image-upload/logo/undefined.png";
     }
 
     const data = {
