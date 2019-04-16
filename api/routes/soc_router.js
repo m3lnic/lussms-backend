@@ -3,6 +3,8 @@ const router = express.Router();
 const db = require('../Database/database');
 const slug = require('slug');
 const upload = require('../Database/filestorage');
+const showdown = require('showdown');
+const converter = new showdown.Converter();
 
 // > Handle incoming GET requests to /societies
 router.get('/', (req, res, next) => {
@@ -20,22 +22,28 @@ router.get('/', (req, res, next) => {
 
 // > Handle incoming GET requests to /societies/{society name}
 router.get('/:socName', (req, res, next) => {
-    res.status(200).json({
-        message: 'Getting information on society',
-    });
-});
+    const societyName = req.params.socName;
+    console.log(societyName);
 
-// > Handle incoming GET requests to /societies/{society name}/edit
-router.get('/:socName/edit', (req, res, next) => {
-    res.status(200).json({
-        // > Will allow edit to the following data: Logo, Description
-        message: 'Retrieving data for society that wants to be edited',
-    });
+    db.promise().query("SELECT name, description, logo FROM societies WHERE nameSlug=?", [societyName])
+        .then((results) => {
+            res.status(200).json(results[0]);
+        })
+        .catch((err) => {
+            console.log(err.stack);
+            res.status(500).json({
+                error: err
+            })
+        });
 });
 
 // > Handle incoming PATCH requests to /societies/{society name}
 // > This is how you update a societies information
 router.patch('/:socName', (req, res, next) => {
+    // > Check to see we aren't posting the same image
+    // > Update values
+    // > ETC
+
     res.status(200).json({
         message: 'Updating society'
     });
@@ -57,7 +65,7 @@ router.post('/new', upload.single('logo'), (req, res, next) => {
         nameSlug: slug(req.body.name, {lower: true}) // > Will convert LA1TV to la1tv and Bailrigg FM to bailriggfm
     }
 
-    db.promise().query(`INSERT INTO societies (name, description, logo, nameSlug) values (?, ?, ?, ?)`, [data.name, data.description, data.logo, data.nameSlug])
+    db.promise().query(`INSERT INTO societies (name, description, logo, nameSlug) values (?, ?, ?, ?)`, [data.name, converter.makeMarkdown(data.description), data.logo, data.nameSlug])
         .then(([rows, fields]) => {
             console.log(rows);
             res.status(200).json({
@@ -74,9 +82,19 @@ router.post('/new', upload.single('logo'), (req, res, next) => {
 
 // > Handle incoming DELETE requests to /societies
 router.delete('/:socName', (req, res, next) => {
-    res.status(200).json({
-        message: 'Deleting society'
-    });
+    const societyName = req.params.socName;
+    console.log(societyName);
+
+    db.promise().query("DELETE FROM societies WHERE nameSlug=?", [societyName])
+        .then((results) => {
+            res.status(200).json(results[0]);
+        })
+        .catch((err) => {
+            console.log(err.stack);
+            res.status(500).json({
+                error: err
+            })
+        });
 });
 
 module.exports = router;

@@ -13,7 +13,7 @@ const s3 = new aws.S3();
 const uploadLogo = multer({
     storage: multerS3({
         s3: s3,
-        bucket: "lussms-image-upload",
+        bucket: process.env.AWS_S3_BUCKET_NAME,
         contentType: multerS3.AUTO_CONTENT_TYPE,
         acl: "public-read",
         key: function (req, file, cb) {
